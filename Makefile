@@ -1,13 +1,13 @@
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c)
-HEADERS = $(wildcard kernel/*.h drivers/*.h)
+C_SOURCES = $(wildcard kernel/*.c drivers/*.c cpu/*.c libc/*.c)
+HEADERS = $(wildcard kernel/*.h drivers/*.h cpu/*.h libc/*.h)
 # Nice syntax for file extension replacement
-OBJ = ${C_SOURCES:.c=.o}
+OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 
 
 # Change this if your cross-compiler is somewhere else
 CC = i386-elf-gcc
 GDB = i386-elf-gdb
 
-CFLAGS = -g
+CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
 
 os-image.bin: boot/bootsect.bin kernel.bin
 	cat $^ > os-image.bin
@@ -30,7 +30,7 @@ debug: os-image.bin kernel.elf
 	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
 
 %.o: %.c ${HEADERS}
-	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
+	${CC} ${CFLAGS} -c $< -o $@
 
 %.o: %.asm
 	nasm $< -f elf -o $@
@@ -40,4 +40,4 @@ debug: os-image.bin kernel.elf
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf
-	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o
+	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o
